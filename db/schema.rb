@@ -10,19 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170410030436) do
+ActiveRecord::Schema.define(version: 20170411050634) do
 
   create_table "suggestions", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",                     null: false
+    t.datetime "updated_at",                     null: false
     t.string   "name"
-    t.integer  "votes"
+    t.integer  "votes",              default: 0
+    t.string   "last_purchase_date"
   end
 
   create_table "users", force: :cascade do |t|
     t.integer  "remaining_votes", default: 3
-    t.datetime "created_at",                  null: false
-    t.datetime "updated_at",                  null: false
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+    t.boolean  "has_suggested",   default: false
   end
 
   create_table "votes", force: :cascade do |t|

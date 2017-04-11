@@ -2,10 +2,9 @@ class Suggestion < ApplicationRecord
     validates :name, uniqueness: {message: "Duplicate Suggestion"}
     validates_presence_of :name
     
-    def self.vote(snack)
-        suggestion = Suggestion.find_by(name: snack)
-        new_total = suggestion.votes + 1
-        suggestion.update(votes: new_total)
+    def voted
+        new_total = self.votes + 1
+        return self.update(votes: new_total)
     end
     
     def self.suggestions
