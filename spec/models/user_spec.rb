@@ -71,6 +71,17 @@ RSpec.describe User, type: :model do
             user = User.create!()
             expect{User.establish_user(user.id)}.to_not change(User, :count)
         end
+        
+        it "should return the id of the found user (or a new key for a new user)" do
+            id = User.establish_user(nil)
+            db_id = User.first.id
+            id.should == db_id
+            
+            user = User.create!()
+            User.establish_user(user.id).should == user.id
+            
+            User.establish_user(id).should == id
+        end
     end
     
     describe "Suggestions" do

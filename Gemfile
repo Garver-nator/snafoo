@@ -52,10 +52,14 @@ group :development, :test do
   gem 'byebug', platform: :mri
   gem 'jasmine-rails' # if you plan to use JavaScript/CoffeeScript
   gem 'poltergeist' 
+  gem 'factory_girl_rails'
+  gem 'rails-controller-testing'
+  gem 'webmock'
 end
 
 group :test do
   gem 'autotest-rails'
-  gem 'factory_girl_rails' 
+  gem 'capybara'
+  gem 'faker'
 end
 

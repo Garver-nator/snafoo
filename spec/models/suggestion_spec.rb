@@ -13,7 +13,7 @@ RSpec.describe Suggestion, type: :model do
         
         it "should check for unique names" do
             Suggestion.create!(:name => "Chips").should be_valid
-            expect{Suggestion.create!(:name => "Chips")}.to raise_error
+            expect{Suggestion.create!(:name => "Chips")}.to raise_error(ActiveRecord::RecordInvalid)
         end
         
         it "should default to 0 votes" do
