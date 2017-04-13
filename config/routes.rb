@@ -7,6 +7,8 @@ Rails.application.routes.draw do
   get 'voting' => "vote#index"
   get 'suggestions' => "suggestion#index"
   post 'vote/vote'
+  post 'suggestion/suggest'
+  post 'suggestion/custom_suggest'
   resources :vote do
       get "index"
       post "vote"

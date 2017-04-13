@@ -9,7 +9,8 @@ class VoteController < ApplicationController
     end
     
     private
-        def api_snacks
-        end
+    
+    def api_snacks
+    end
     
 end

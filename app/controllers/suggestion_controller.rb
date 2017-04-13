@@ -5,7 +5,14 @@ class SuggestionController < ApplicationController
     def index
     end
     
-    def create
+    def suggest
     end
     
+    def custom_suggest 
+    end
+    
+    private
+    
+    def opt_api_snacks
+    end
 end
