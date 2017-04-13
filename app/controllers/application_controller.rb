@@ -5,5 +5,5 @@ class ApplicationController < ActionController::Base
   
   # Before each controller action, make sure the user has an id stored in the session 
   before_filter :establish_user
-  def establish_user; session[:user_id] = User.establish_user(session[:user_id]);end;
+  def establish_user; cookies[:user_id] = User.establish_user(cookies[:user_id]); end;
 end

@@ -40,11 +40,10 @@ RSpec.describe Suggestion, type: :model do
     
     describe "Listing suggestions" do
         it "should list suggestions in alphabetical order" do
-            chips = Suggestion.create!(:name => "Chips")
-            apples = Suggestion.create!(:name => "Apples")
-            pretzels = Suggestion.create!(:name => "Pretzels")
-            
-            Suggestion.suggestions.should == ["Apples", "Chips", "Pretzels"]
+            FactoryGirl.create(:suggestion, name: "Pretzels")
+            FactoryGirl.create(:suggestion, name: "Chips")
+            FactoryGirl.create(:suggestion, name: "Apples")
+            Suggestion.suggestions.should == [["Apples", "3/1/2017"], ["Chips", "3/1/2017"], ["Pretzels", "3/1/2017"]]
         end
     end
 end

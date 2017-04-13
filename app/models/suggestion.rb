@@ -8,7 +8,7 @@ class Suggestion < ApplicationRecord
     end
     
     def self.suggestions
-        return Suggestion.all.select(:name).map(&:name).sort
-    end
+        return Suggestion.order(:name).pluck(:name, :last_purchase_date)
+    end 
 end
     

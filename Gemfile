@@ -28,6 +28,7 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem 'rails_12factor'
 gem 'jquery-turbolinks'
 gem 'gon'
+gem 'httparty'
 
 group :production do
   # needed for heroku deployment

@@ -7,6 +7,7 @@ RSpec.describe VoteController, type: :controller do
             @pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
             @cookies = FactoryGirl.create(:suggestion, name: "Cookies")
             @user = FactoryGirl.create(:user, remaining_votes: 2)
+            cookies[:user_id] = @user.id
         end
         
         it "populates an array of snacks via api_snacks" do
@@ -14,7 +15,7 @@ RSpec.describe VoteController, type: :controller do
         end
         
         it "populates an array of suggestions from the model" do 
-            expect{ get :index }.to change{ assigns(:suggestions) }.to([@cookies, @pretzels])
+            expect{ get :index }.to change{ assigns(:suggestions) }.to([["Cookies", "3/1/2017"], ["Pretzels", "3/1/2017"]])
         end
         
         it "puts an error in flash if the webservice is down" do
@@ -24,7 +25,7 @@ RSpec.describe VoteController, type: :controller do
         end
             
         it "finds the user's remaining votes" do
-            expect{ get :index, user_id: @user.id }.to change{ assigns(:remaining_votes) }.to(@user.remaining_votes)
+            expect{ get :index }.to change{ assigns(:remaining_votes) }.to(@user.remaining_votes)
         end
             
         it "renders the vote view" do
@@ -34,38 +35,49 @@ RSpec.describe VoteController, type: :controller do
     end
     
     describe "#POST vote" do
+        before :each do 
+            @user = FactoryGirl.create(:user, remaining_votes: 3)
+            @pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
+            @apples = FactoryGirl.create(:suggestion, name: "Apples")
+            cookies[:user_id] = @user.id
+        end
+            
         context "with a valid vote" do
-            before :each do 
-                @user = FactoryGirl.create(:user, remaining_votes: 3)
-                @pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
-            end
-
             it "saves the new vote in the database" do
                 expect{
-                    xhr :post, :vote, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                    xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
                 }.to change(Vote, :count).by(1)
             end
             
             it "updates the Suggestion entry (+1 vote count)" do
                 expect{
-                    xhr :post, :vote, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to change(@pretzels, :votes).by(1)
+                    xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
+                }.to change{ assigns(:suggestion_votes) }.to(1)
+                
+                cookies[:user_id] = nil
+                expect{
+                    xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
+                }.to change{ assigns(:suggestion_votes) }.to(2)
+                
             end
                 
             it "decrements the user's remaining vote count" do
-                user = User.create!()
                 expect{
-                    xhr :post, :vote, {:format => "js", user_id: user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to change(user, :remaining_votes).by(1)
+                    xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
+                }.to change{ assigns(:user_votes) }.to(2)
+                
+                expect{
+                    xhr :post, :vote, {:format => "json", suggestion_name: @apples.name}
+                }.to change{ assigns(:user_votes) }.to(1)
             end
                 
             it "responds with a successful AJAX response" do
-                xhr :post, :vote, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
                 expect(response).to be_success
             end
             
             it "doesn't render anything" do
-                xhr :post, :vote, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
                 expect(response).to render_template(nil)
             end
         end
@@ -73,18 +85,17 @@ RSpec.describe VoteController, type: :controller do
         context "with no remaining votes" do
             it "responds with 'no remaining votes' failure response" do
                 user = FactoryGirl.create(:user, remaining_votes: 0)
-                xhr :post, :vote, {:format => "js", user_id: user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                expect(response).to be_failure
+                cookies[:user_id] = user.id
+                xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
+                flash[:error].should == "Out of votes"
             end
         end
         
         context "the snack was already voted on" do
             it "responds with 'already voted' failure response" do
-                pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
-                user = FactoryGirl.create(:user)
-                vote = FactoryGirl.create(:vote, user_id: user.id, suggestion_id: pretzels.id)
-                xhr :post, :vote, {:format => "js", user_id: user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                expect(response).to be_failure
+                vote = FactoryGirl.create(:vote, user_id: @user.id, suggestion_id: @pretzels.id)
+                xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
+                flash[:error].should == "Already voted for this"
             end
         end
     end
@@ -92,10 +103,10 @@ RSpec.describe VoteController, type: :controller do
     describe "api_snacks" do
         before :each do
             @controller = VoteController.new
-            @response = '[{"id": 6, "name": "Chips", "optional": true, "purchaseLocations": "Store", "purchaseCount": 0, "lastPurchaseDate": null},
-                        {"id": 17, "name": "Jerky", "optional": false, "purchaseLocations": "B Store", "purchaseCount": 500, "lastPurchaseDate": "10/10/2010"}]'
+            @response = [{"id": 6, "name": "Chips", "optional": true, "purchaseLocations": "Store", "purchaseCount": 0, "lastPurchaseDate": nil},
+                        {"id": 17, "name": "Jerky", "optional": false, "purchaseLocations": "B Store", "purchaseCount": 500, "lastPurchaseDate": "10/10/2010"}].to_json
                         
-            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: @response, status: "200", headers: {})
+            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: @response, status: 200, :headers => {'Content-Type' => 'application/json'})
         end
         
         it "returns an array with snacks from the webservice" do
@@ -107,8 +118,8 @@ RSpec.describe VoteController, type: :controller do
         end
             
         it "returns false if the webservice is down" do
-            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: @response, status: "Not 200", headers: {})
-            @controller.send(:api_snacks).should be_false
+            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: @response, status: 500, headers: {})
+            @controller.send(:api_snacks).should be false
         end
     end
         
