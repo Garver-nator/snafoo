@@ -1,14 +1,56 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE HTML>
+<html lang="en" id="voting-page">
 <head>
-  <title>Workspace</title>
+  <title>Snafoo!</title>
   <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
   <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
   <%= csrf_meta_tags %>
 </head>
-<body>
 
-<%= yield %>
+<body>
+  <!-- JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  
+  <ul>
+    <li><a href="voting">Voting</a></li>
+    <li><a href="suggestions">Suggestions</a></li>
+  </ul>
+  
+  <!-- Page Body -->
+  <table id="purchased">
+    <tr id="header">
+        <th>Purchased</th>
+    </tr>
+    
+    <% if !@snacks %>
+      <tr><td><%= flash[:error] %></td></tr>
+    <% else %>
+      <% @snacks.each do |snack| %>
+        <tr>
+          <td><%= snack %></td>
+        </tr>
+      <% end %>
+    <% end %>
+  </table>
+  
+  <table id="suggested">
+    <tr id="header">
+        <th>Snack</th>
+        <th>Last Purchased</th>
+        <th>Votes</th>
+        <th>Vote</th>
+    </tr>
+    
+    <% @suggestions.each do |s| %>
+      <tr>
+        <td><%= s[:name] %></td>
+        <td><%= s[:last_purchase_date] %></td>
+        <td><%= s[:votes] %></td>
+        <td><button id='<%= s[:name] %>'>Vote!</button></td>
+      </tr>
+    <% end %>
+  
+  </table>
 
 </body>
 </html>

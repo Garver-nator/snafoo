@@ -15,7 +15,8 @@ RSpec.describe VoteController, type: :controller do
         end
         
         it "populates an array of suggestions from the model" do 
-            expect{ get :index }.to change{ assigns(:suggestions) }.to([["Cookies", "3/1/2017"], ["Pretzels", "3/1/2017"]])
+            expected = [{:name=>"Cookies", :last_purchase_date=>"3/1/2017", :votes=>0}, {:name=>"Pretzels", :last_purchase_date=>"3/1/2017", :votes=>0}]
+            expect{ get :index }.to change{ assigns(:suggestions) }.to(expected)
         end
         
         it "puts an error in flash if the webservice is down" do

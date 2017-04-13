@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   # See how all your routes lay out with "rake routes".
 
   # You can have the root of your site routed with "root"
-  root 'vote#index'
+  root :to => redirect('/voting')
   get 'voting' => "vote#index"
   get 'suggestions' => "suggestion#index"
   post 'vote/vote'

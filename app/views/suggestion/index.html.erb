@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html lang="en" id="suggestion-page">
+<head>
+  <title>Snafoo!</title>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+</head>
+
+<body>
+  <!-- JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  
+  <ul>
+    <li><a href="voting">Voting</a></li>
+    <li><a href="suggestions">Suggestions</a></li>
+  </ul>
+  
+  <% if !@optional_snacks %>
+      <tr><td><%= flash[:error] %></td></tr>
+  <% else %>
+      <select name="cars">
+        <% @optional_snacks.each do |s| %>
+            <option value='<%= s %>'><%= s[:name] %></option>
+        <% end %>
+        <option value="custom">Custom</option>
+      <\select>
+  <% end %>
+  
+  <br><br>
+  <button id="suggest">Suggest!</button>
+
+</body>
+</html>

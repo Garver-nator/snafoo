@@ -12,7 +12,7 @@ RSpec.describe SuggestionController, type: :controller do
         
         it "renders the suggestion view" do
             get :index
-            response.should render_template :suggestion
+            response.should render_template :index
         end
     end
     
@@ -20,24 +20,24 @@ RSpec.describe SuggestionController, type: :controller do
         context "valid drop-down suggestion" do
             before :each do 
                 @user = FactoryGirl.create(:user)
-                @pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
+                cookies[:user_id] = @user.id
+                @pretzels = {name: "Pretzels", last_purchase_date: "2/2/2002"}
             end
             
             it "adds the suggested snack to the Suggestions db" do
                 expect{
-                    xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                    xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
                 }.to change(Suggestion, :count).by(1)
             end
             
             it "updates the user's 'has_suggested' bool" do
-                user = User.create!()
                 expect{
-                    xhr :post, :suggest, {:format => "js", user_id: user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to change(user, :has_suggested).from(false).to(true)
+                    xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
+                }.to change{ assigns(:has_suggested) }.to(true)
             end
             
             it "doesn't render anything" do
-                xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
                 expect(response).to render_template(nil)
             end
         end
@@ -45,126 +45,145 @@ RSpec.describe SuggestionController, type: :controller do
         context "user already made a suggestion" do
             before :each do 
                 @user = FactoryGirl.create(:user, has_suggested: true)
+                cookies[:user_id] = @user.id
+                @pretzels = {name: "Pretzels", last_purchase_date: "2/2/2002"}
             end
             
             it "doesn't update Suggestions" do
                 expect{
-                    xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                    xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
                 }.to_not change(Suggestion, :count)
             end
                 
             it "stores an error in flash" do
-                xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
                 expect(flash[:error]).to be_present
             end
                 
             it "doesn't change user.suggested" do
                 expect{
-                    xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to_not change(@user, has_suggested)
+                    xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
+                }.to_not change(@user, :has_suggested)
             end
         end 
         
         context "user suggests a duplicate snack" do
             before :each do 
                 @user = FactoryGirl.create(:user)
-                @pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
-                Suggestion.create!(name: "Pretzels")
+                pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
+                @pretzels = {name: "Pretzels", last_purchase_date: "2/2/2002"}
+                cookies[:user_id] = @user.id
             end
             
             it "should not update Suggestions" do
                 expect{
-                    xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                    xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
                 }.to_not change(Suggestion, :count)
             end
                 
             it "should report an error" do
-                xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
                 expect(flash[:error]).to be_present
             end
             
             it "doesn't use the user's suggestion" do
                 expect{
-                    xhr :post, :suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to_not change(@user, has_suggested)
+                    xhr :post, :suggest, {:format => "json", suggestion: @pretzels}
+                }.to_not change(@user, :has_suggested)
             end
         end
     end
     
     describe "#POST custom_suggest" do
+        before :each do
+            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: "", status: 200, :headers => {'Content-Type' => 'application/json'})
+        end
+        
         context "valid custom suggestion" do
             before :each do 
                 @user = FactoryGirl.create(:user)
-                @pretzels = FactoryGirl.create(:suggestion, name: "Pretzels")
-                stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: "", status: "200", headers: {})
+                @pretzels = {name: "Pretzels", location: "Store"}
+                cookies[:user_id] = @user.id
             end
             
             it "doesn't add the suggested snack to the Suggestions db" do
                 expect{
-                    xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @pretzels}
                 }.to_not change(Suggestion, :count)
             end
                 
             it "should store an error if the webservice fails" do
-                stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: "", status: "Not 200", headers: {})
-                xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: "", status: 500, :headers => {'Content-Type' => 'application/json'})
+                xhr :post, :custom_suggest, {:format => "json", suggestion: @pretzels}
                 expect(flash[:error]).to be_present
             end
                 
             it "uses the user's monthly suggestion" do
                 expect{
-                    xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to change(@user, has_suggested).to(true)
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @pretzels}
+                }.to change{ assigns(:suggested) }.to(true)
             end
         end
         
         context "user suggests an invalid (missing fields) snack" do
             before :each do 
                 @user = FactoryGirl.create(:user)
-                @no_name_snack = FactoryGirl.create(:suggestion, name: nil)
-                stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: "", status: "Not 200", headers: {}) # Should never be sent in this context
+                @no_location_snack = {name: "Pretzels", location: nil}
+                @no_name_snack =  {name: nil, location: "Store"}
+                cookies[:user_id] = @user.id
             end
             
             it "should not update Suggestions" do
                 expect{
-                    xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(@no_name_snack)}
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @no_name_snack}
+                }.to_not change(Suggestion, :count)
+                
+                expect{
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @no_location_snack}
                 }.to_not change(Suggestion, :count)
             end
             
             it "should report an error" do
-                xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                xhr :post, :custom_suggest, {:format => "json", suggestion: @no_name_snack}
                 expect(flash[:error]).to be_present
+                
+                #xhr :post, :custom_suggest, {:format => "json", suggestion: @no_location_snack}
+                #expect(flash[:error]).to be_present
             end
                 
             it "doesn't use the user's one suggestion" do
                 expect{
-                    xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to_not change(@user, has_suggested)
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @no_name_snack}
+                }.to_not change{ assigns(:suggested) }
+                
+                expect{
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @no_location_snack}
+                }.to_not change{ assigns(:suggested) }
             end
         end
         
         context "user already made a suggestion" do
             before :each do 
                 @user = FactoryGirl.create(:user, has_suggested: true)
-                @no_name_snack = FactoryGirl.create(:suggestion, name: nil)
-                stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: "", status: "Not 200", headers: {}) # Should never be sent in this context
+                @pretzels = {name: "Pretzels", location: "Store"}
+                cookies[:user_id] = @user.id
             end
             
             it "doesn't update Suggestions" do
                 expect{
-                    xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(@no_name_snack)}
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @pretzels}
                 }.to_not change(Suggestion, :count)
             end
                 
             it "stores an error in flash" do
-                xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
+                xhr :post, :custom_suggest, {:format => "json", suggestion: @pretzels}
                 expect(flash[:error]).to be_present
             end
             
             it "doesn't change user.has_suggested" do
                 expect{
-                    xhr :post, :custom_suggest, {:format => "js", user_id: @user.id, suggestion: FactoryGirl.attributes_for(:suggestion)}
-                }.to_not change(@user, has_suggested)
+                    xhr :post, :custom_suggest, {:format => "json", suggestion: @pretzels}
+                }.to_not change{ assigns(:has_suggested) }
             end
         end 
     end
@@ -172,10 +191,10 @@ RSpec.describe SuggestionController, type: :controller do
     describe "opt_api_snacks" do
          before :each do
             @controller = SuggestionController.new
-            @response = '[{"id": 6, "name": "Chips", "optional": true, "purchaseLocations": "Store", "purchaseCount": 0, "lastPurchaseDate": null},
-                        {"id": 17, "name": "Jerky", "optional": false, "purchaseLocations": "B Store", "purchaseCount": 500, "lastPurchaseDate": "10/10/2010"}]'
+            @response = [{"id": 6, "name": "Chips", "optional": true, "purchaseLocations": "Store", "purchaseCount": 0, "lastPurchaseDate": nil},
+                        {"id": 17, "name": "Jerky", "optional": false, "purchaseLocations": "B Store", "purchaseCount": 500, "lastPurchaseDate": "10/10/2010"}].to_json
                         
-            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: @response, status: "200", headers: {})
+            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: @response, status: 200, :headers => {'Content-Type' => 'application/json'})
         end
         
         it "returns an array with the 'optional' snacks from the webservice" do
@@ -189,8 +208,8 @@ RSpec.describe SuggestionController, type: :controller do
         end
         
         it "returns false if webservice fails" do
-            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: @response, status: "Not 200", headers: {})
-            @controller.send(:opt_api_snacks).should be_false
+            stub_request(:any, /api-snacks.nerderylabs.com/).to_return(body: "", status: 500, :headers => {'Content-Type' => 'application/json'})
+            @controller.send(:opt_api_snacks).should be false
         end
     end
 end

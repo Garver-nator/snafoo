@@ -1,6 +1,5 @@
 class VoteController < ApplicationController
-    require 'json'
-    API_KEY = "f5de8591-ec85-494d-b415-436cfc79f7e8"
+    API_URL = "https://api-snacks.nerderylabs.com/snacks/?ApiKey=f5de8591-ec85-494d-b415-436cfc79f7e8"
     
     def index
         @user = User.find(cookies[:user_id])
@@ -15,7 +14,6 @@ class VoteController < ApplicationController
     
     def vote
         @user = User.find(cookies[:user_id])
-        @name = params[:suggestion_name]
         suggestion = Suggestion.find_by(name: params[:suggestion_name])
         
         if suggestion.nil?
@@ -54,7 +52,7 @@ class VoteController < ApplicationController
     def api_snacks
         # It's bad practice to catch unspecified errors like this, but I was unclear what error to expect from a timeout
         begin
-            api_response = HTTParty.get("https://api-snacks.nerderylabs.com/snacks/?ApiKey=f5de8591-ec85-494d-b415-436cfc79f7e8")
+            api_response = HTTParty.get(API_URL)
         rescue
             return false
         end

@@ -42,8 +42,9 @@ RSpec.describe Suggestion, type: :model do
         it "should list suggestions in alphabetical order" do
             FactoryGirl.create(:suggestion, name: "Pretzels")
             FactoryGirl.create(:suggestion, name: "Chips")
-            FactoryGirl.create(:suggestion, name: "Apples")
-            Suggestion.suggestions.should == [["Apples", "3/1/2017"], ["Chips", "3/1/2017"], ["Pretzels", "3/1/2017"]]
+            FactoryGirl.create(:suggestion, name: "Apples", votes: 13)
+            expected_hash = [{:name=>"Apples", :last_purchase_date=>"3/1/2017", :votes=>13}, {:name=>"Chips", :last_purchase_date=>"3/1/2017", :votes=>0}, {:name=>"Pretzels", :last_purchase_date=>"3/1/2017", :votes=>0}]
+            Suggestion.suggestions.should == expected_hash
         end
     end
 end
