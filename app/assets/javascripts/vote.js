@@ -1,5 +1,6 @@
 /* global $ */
 
+// Updates the user's remaining votes and the snack's vote tally (doesn't affect server)
 function updateVotes(snackName){
     var remainingVotes = parseInt($('#remainingVotes').text().substr(-1));
     $('#remainingVotes').text("Votes remaining: " + String(remainingVotes-1));
@@ -11,6 +12,8 @@ function updateVotes(snackName){
 }
 
 $(document).on('turbolinks:load', function() {
+  
+  // When any vote button is pressed, POSTS a vote for the corresponding snacks, then updates
     $('button[class="vote"]').off('click').on('click', function() {
       var snackName = $(this).attr("name");
       var req = $.ajax({

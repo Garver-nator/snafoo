@@ -1,0 +1,42 @@
+MODELS:
+I didn't worry too much about scalability since this would be an in-house application with 
+limited users, but I kept track of snack votes in 2 ways:
+
+- The Vote model stores all user's votes (User ID, Suggestion ID) pairs
+    This seemed safer for logging, if it appears there are too many votes you can 
+    track who voted for what. You can tally votes by a Vote.filter, but I 
+    decided that was potentially too expensive an operation
+    
+- The Suggestion model stores (Snack, votes) pairs
+    This seemed like the cheapest way to track vote tallys, since it has O(1) lookup.
+    I was worried about whether PostgreSQL could safely handle concurrent
+    increments to the same "votes" entry, but after a quick search it appeared
+    to be safe. This may not be scalable to a large user base with many 
+    concurrent votes to the same suggestions.
+    
+- The User model only keeps track of IDs
+    As stated in the NAT spec, storing the ID in the cookie is an unsecure
+    but easy method to track user actions without logins
+    
+VIEWS:
+I leaned heavily on the NAT statement that the HTML would not be judged beyond functionality, 
+and just made the barest functional HTML, with no CSS written.
+
+TESTING/DOCUMENTATION:
+I tried to make my rspec unit tests exhaustive for all models and controllers. I did not
+implement any integration tests because it appeared the only site functionality that requires them is
+sending suggestions to the voting page, which was very quick to test manually. In a full application with more
+functionality to be tested, I would've used Capybara with Cucumber for integration tests.
+
+I also tried to minimize any explicit documentation in favor of more readable code.
+    
+NAT SPEC CORRECTION:
+I pointed out an error in the NAT to Shane: The web service only has optional snacks when they are suggested by the app via a POST. 
+This means that in theory there should be no need for a drop-down select on the Suggestions page, since all optional snacks
+must've already been suggested by a user. In response to this, I removed the filter that removes already suggested snacks from the 
+drop down, and any attempt to suggest a non-custom snack results in an Invalid Suggestion alert.
+
+Shane also told me that the snack data shouldn't be stored locally, but I believe my implementation of the Suggestion model
+to keep track of votes is still an alright practice. The web service doesn't distinguish if an optional snack has been 
+suggested or not, so by storing the suggestions locally, I can more easily keep track of votes, and if the above error is corrected, 
+I can tell apart optional snacks that have and haven't been suggested by a user.

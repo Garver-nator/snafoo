@@ -13,6 +13,7 @@ class VoteController < ApplicationController
         end
     end
     
+    # Checks if POSTed vote is valid, updates User/Suggestion/Vote, then responds with corresponding success/failure codes
     def vote
         @user = User.find(cookies[:user_id])
         suggestion = Suggestion.find_by(name: params[:suggestion_name])
@@ -53,6 +54,7 @@ class VoteController < ApplicationController
     
     private
     
+    # Returns an array of non-optional snacks from the web service
     # API requests should be handled by a separate class, but this is quick for prototyping
     def api_snacks
         # It's bad practice to catch unspecified errors like this, but I was unclear what error to expect from a timeout

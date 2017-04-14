@@ -11,6 +11,8 @@ class SuggestionController < ApplicationController
         end
     end
     
+    # Recieves a POST for a non-custom suggestion, checks if valid, then updates User/Suggestion
+    # Currently non-custom suggestion will always be invalid due to NAT spec issue
     def suggest
         @user = User.find(cookies[:user_id])
         suggestion = params[:suggestion]
@@ -35,12 +37,15 @@ class SuggestionController < ApplicationController
         end
     end
     
+    # Recieves a POST for a non-custom suggestion, checks if valid, then sends to webservice
     def custom_suggest
         @user = User.find(cookies[:user_id])
         suggestion = params[:suggestion]
         
         if @user.can_suggest? && Suggestion.is_valid?(suggestion) && !(suggestion["location"].nil? || suggestion["location"] == "")
             message = {name: suggestion["name"], location: suggestion["location"]}.to_json
+            
+            # Catching unspecified errors is bad practice, but I couldn't find documentation on what errors to expect from timeouts
             begin
                 api_response = HTTParty.post(API_URL, :body => message, :headers => { 'Content-Type' => 'application/json' } )
             rescue
@@ -80,6 +85,7 @@ class SuggestionController < ApplicationController
     
     private
     
+    # Returns an array of optional snacks from the webservice
     def opt_api_snacks
         # It's bad practice to catch unspecified errors like this, but I was unclear what error to expect from a timeout
         begin

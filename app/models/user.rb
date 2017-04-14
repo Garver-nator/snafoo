@@ -4,7 +4,8 @@ class User < ApplicationRecord
     def self.establish_user(id)
         id ? id : User.create().id
     end
-            
+           
+    # Decrement's the user's remaining votes, or returns false if they are out of votes 
     def vote
         if self.remaining_votes <= 0
             return false
@@ -14,6 +15,7 @@ class User < ApplicationRecord
         end
     end
     
+    # Toggles the has_suggested boolean
     def suggest
         if self.has_suggested
             return false
