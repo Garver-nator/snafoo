@@ -1,5 +1,7 @@
 class SuggestionController < ApplicationController
-    API_URL = "https://api-snacks.nerderylabs.com/snacks/?ApiKey=f5de8591-ec85-494d-b415-436cfc79f7e8"
+    protect_from_forgery :except => [:suggest, :custom_suggest]
+    
+    API_URL = "https://api-snacks.nerderylabs.com/v1/snacks/?ApiKey=f5de8591-ec85-494d-b415-436cfc79f7e8"
     
     def index
         @user = User.find(cookies[:user_id])
@@ -58,6 +60,7 @@ class SuggestionController < ApplicationController
             else
                 @user.suggest
                 @suggested = @user.has_suggested
+                Suggestion.create(name: suggestion["name"]) # Added after change to NAT spec
                 respond_to do |format|
                     format.json{ head :ok }
                     return
@@ -89,10 +92,10 @@ class SuggestionController < ApplicationController
         body = JSON.parse(api_response.body)
         snacks = []
         for snack in body do
-            if snack["optional"] and !Suggestion.find_by(name: snack["name"])
+            if snack["optional"] # && !Suggestion.find_by(name: snack["name"]) (Used before NAT spec changes)
                 snacks += [{name: snack["name"], last_purchase_date: snack["lastPurchaseDate"]}]
             end
         end
-        return snacks.sort
+        return snacks
     end
 end

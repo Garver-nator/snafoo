@@ -54,12 +54,6 @@ RSpec.describe VoteController, type: :controller do
                 expect{
                     xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
                 }.to change{ assigns(:suggestion_votes) }.to(1)
-                
-                cookies[:user_id] = nil
-                expect{
-                    xhr :post, :vote, {:format => "json", suggestion_name: @pretzels.name}
-                }.to change{ assigns(:suggestion_votes) }.to(2)
-                
             end
                 
             it "decrements the user's remaining vote count" do

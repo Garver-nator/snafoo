@@ -33,6 +33,9 @@
     <% end %>
   </table>
   
+  <br>
+  <div id="remainingVotes" votes='<%= @remaining_votes %>'><b><%= "Votes remaining: " + @remaining_votes.to_s %></b></div>
+
   <table id="suggested">
     <tr id="header">
         <th>Snack</th>
@@ -45,8 +48,8 @@
       <tr>
         <td><%= s[:name] %></td>
         <td><%= s[:last_purchase_date] %></td>
-        <td><%= s[:votes] %></td>
-        <td><button id='<%= s[:name] %>'>Vote!</button></td>
+        <td class="voteCount" name='<%= s[:name] %>'><%= s[:votes] %></td>
+        <td><button class="vote" name='<%= s[:name] %>'>Vote!</button></td>
       </tr>
     <% end %>
   

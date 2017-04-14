@@ -1,5 +1,6 @@
 class VoteController < ApplicationController
-    API_URL = "https://api-snacks.nerderylabs.com/snacks/?ApiKey=f5de8591-ec85-494d-b415-436cfc79f7e8"
+    protect_from_forgery :except => [:vote]
+    API_URL = "https://api-snacks.nerderylabs.com/v1/snacks/?ApiKey=f5de8591-ec85-494d-b415-436cfc79f7e8"
     
     def index
         @user = User.find(cookies[:user_id])
@@ -21,16 +22,19 @@ class VoteController < ApplicationController
             respond_to do |format|
                 format.json{ render :json => { :error => "Invalid vote" }, :status => 400}
             end
+            return
         elsif !@user.can_vote?
             flash[:error] = "Out of votes"
             respond_to do |format|
-                format.json{ render :json => { :error => "Out of votes" }, :status => 409}
+                format.json{ render :json => { :error => "You may not vote again until next month" }, :status => 409}
             end
+            return
         elsif Vote.has_voted?(@user.id, suggestion.id)
             flash[:error] = "Already voted for this"
             respond_to do |format|
-                format.json{ render :json => { :error => "Already voted for this" }, :status => 409}
+                format.json{ render :json => { :error => "You already voted for this" }, :status => 409}
             end
+            return
         end
         
         suggestion.voted
@@ -43,6 +47,7 @@ class VoteController < ApplicationController
         
         respond_to do |format|
             format.json{ head :ok }
+            return
         end
     end
     

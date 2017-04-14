@@ -106,10 +106,10 @@ RSpec.describe SuggestionController, type: :controller do
                 cookies[:user_id] = @user.id
             end
             
-            it "doesn't add the suggested snack to the Suggestions db" do
+            it "does add the suggested snack to the Suggestions db" do
                 expect{
                     xhr :post, :custom_suggest, {:format => "json", suggestion: @pretzels}
-                }.to_not change(Suggestion, :count)
+                }.to change(Suggestion, :count).by(1)
             end
                 
             it "should store an error if the webservice fails" do

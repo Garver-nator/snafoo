@@ -10,25 +10,41 @@
 <body>
   <!-- JQuery -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <% javascript_include_tag "suggestion" %>
   
   <ul>
     <li><a href="voting">Voting</a></li>
     <li><a href="suggestions">Suggestions</a></li>
   </ul>
   
-  <% if !@optional_snacks %>
-      <tr><td><%= flash[:error] %></td></tr>
+  <% if @optional_snacks == false %>
+    <%= flash[:error] %>
   <% else %>
-      <select name="cars">
-        <% @optional_snacks.each do |s| %>
-            <option value='<%= s %>'><%= s[:name] %></option>
+      <select class="browser-default" id="dropdown" onchange="dropUpdate();">
+        <option value="" disabled selected>Choose your snack</option>
+        <% @optional_snacks.each do |snack| %>
+          <option value="snack" name='<%= snack[:name] %>' date='<%= snack[:lastPurchaseDate] %>'><%= snack[:name] %></option>
         <% end %>
         <option value="custom">Custom</option>
-      <\select>
+      </select>
   <% end %>
   
-  <br><br>
-  <button id="suggest">Suggest!</button>
+  <br>
+  <button id="suggest">Suggest</button>
+  
+  <form id="customForm">
+    <label for="Snack">
+      <span>Snack</span>
+      <input type="text" id="name" />
+    </label>
+    <label for="location">
+      <span>Store</span>
+      <input type="text" id="location" />
+    </label>
+  </form>
+  
+  <br>
+  <button id="suggestCustom">Suggest</button>
 
 </body>
 </html>
