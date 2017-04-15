@@ -5,4 +5,4 @@ Tests can be found in /spec/, and are all currently passing.
 
 A short writeup of my design decisions can be found in ./DesignChoices.txt
 
-[Current App Deployment]()
+[Current App Deployment](https://rq-snafoo.herokuapp.com/)

@@ -34,7 +34,8 @@ NAT SPEC CORRECTION:
 I pointed out an error in the NAT to Shane: The web service only has optional snacks when they are suggested by the app via a POST. 
 This means that in theory there should be no need for a drop-down select on the Suggestions page, since all optional snacks
 must've already been suggested by a user. In response to this, I removed the filter that removes already suggested snacks from the 
-drop down, and any attempt to suggest a non-custom snack results in an Invalid Suggestion alert.
+drop down, and any attempt to suggest a non-custom snack results in an Invalid Suggestion alert (except for snacks which I suggested in
+development, which can be added via the dropdown in production)
 
 Shane also told me that the snack data shouldn't be stored locally, but I believe my implementation of the Suggestion model
 to keep track of votes is still an alright practice. The web service doesn't distinguish if an optional snack has been 
